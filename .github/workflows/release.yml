@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build artifacts
+        run: sh scripts/build-dex.sh
+
+      - name: Read version
+        id: version
+        run: echo "value=$(tr -d '\r\n' < VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rutophone-${{ github.run_number }}
+          path: |
+            out/rutophone.dex
+            out/rutophone.jar
+          if-no-files-found: error
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          append_body: true
+          body: |
+            ## Build Info
+            - Base version: `${{ steps.version.outputs.value }}`
+            - Commit: `${{ github.sha }}`
+
+            ## Artifacts
+            - `rutophone.dex`
+            - `rutophone.jar`
+          files: |
+            out/rutophone.dex
+            out/rutophone.jar
