@@ -1,0 +1,11 @@
+package dex.rutophone;
+
+public final class BuildConfig {
+
+    public static final String BASE_VERSION = "__BASE_VERSION__";
+    public static final String GIT_SHORT_ID = "__GIT_SHORT_ID__";
+    public static final String VERSION = "__VERSION__";
+
+    private BuildConfig() {
+    }
+}
